@@ -422,19 +422,25 @@ export default function Home() {
           fresh AI prompts, served warm
         </div>
 
-        <h1 className="flex flex-wrap items-center justify-center gap-2 text-5xl font-bold tracking-tight text-black sm:text-6xl">
-          <span className="animate-float inline-block">🫘</span>
-          <span className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 bg-clip-text text-transparent">
-            beans
-          </span>
-          <span className="text-black/40">&amp;</span>
-          <span className="bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 bg-clip-text text-transparent">
-            toast
-          </span>
-          <span className="animate-float inline-block [animation-delay:1.5s]">
-            🍞
-          </span>
-        </h1>
+        <div className="inline-flex rotate-[-1deg] items-center rounded-[2rem] border-[3px] border-black bg-white px-5 py-3 shadow-chunky-lg sm:px-7 sm:py-4">
+          <h1 className="flex flex-wrap items-center justify-center gap-2 text-5xl font-bold tracking-tight text-black sm:text-6xl">
+            <span className="animate-float inline-block drop-shadow-[2px_2px_0_rgba(0,0,0,0.85)]">
+              🫘
+            </span>
+            <span className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 bg-clip-text text-transparent drop-shadow-[2px_2px_0_rgba(0,0,0,0.9)]">
+              beans
+            </span>
+            <span className="text-black/40 drop-shadow-[2px_2px_0_rgba(0,0,0,0.15)]">
+              &amp;
+            </span>
+            <span className="bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 bg-clip-text text-transparent drop-shadow-[2px_2px_0_rgba(0,0,0,0.9)]">
+              toast
+            </span>
+            <span className="animate-float inline-block drop-shadow-[2px_2px_0_rgba(0,0,0,0.85)] [animation-delay:1.5s]">
+              🍞
+            </span>
+          </h1>
+        </div>
 
         <p className="mx-auto mt-4 max-w-xl text-sm font-medium leading-relaxed text-black/70 sm:text-base">
           A playful little kitchen for cooking up AI image prompts — 3D
