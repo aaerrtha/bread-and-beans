@@ -411,9 +411,12 @@ export default function Home() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col px-4 py-6 sm:px-6 sm:py-8 lg:h-screen lg:overflow-hidden">
-      {/* Header */}
-      <header className="mb-8 text-center lg:shrink-0">
+    <main className="relative flex h-screen flex-col overflow-hidden">
+      {/* Scrollable content: header + centered controls */}
+      <div className="flex-1 overflow-y-auto px-4 pt-6 sm:px-6 sm:pt-8">
+        <div className="mx-auto w-full max-w-2xl">
+          {/* Header */}
+          <header className="mb-8 text-center">
         <div className="mb-5 inline-flex rotate-[-2deg] items-center gap-2 rounded-full border-2 border-black bg-white px-4 py-1.5 text-xs font-bold text-black shadow-[3px_3px_0_0_rgba(0,0,0,0.85)]">
           <Sparkles className="h-4 w-4 text-rose-500" />
           fresh AI prompts, served warm
@@ -441,10 +444,9 @@ export default function Home() {
         </p>
       </header>
 
-      <div className="grid gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-5">
-        {/* Controls (independently scrollable on desktop) */}
-        <section className="space-y-6 lg:col-span-3 lg:-mx-4 lg:overflow-y-auto lg:px-4 lg:pt-2 lg:pb-6">
-          {/* Subject */}
+          {/* Controls (centered single column) */}
+          <section className="space-y-6 pb-8">
+            {/* Subject */}
           <SectionCard
             accent={ACCENTS.butter}
             title="Subject"
@@ -557,67 +559,73 @@ export default function Home() {
               ))}
             </div>
           </SectionCard>
-        </section>
+          </section>
 
-        {/* Output */}
-        <section className="lg:col-span-2 lg:-mr-2 lg:pr-2 lg:pb-4">
-          <div className="flex max-h-full flex-col rotate-[0.5deg] rounded-3xl border-2 border-black bg-white p-5 shadow-chunky-lg">
-            <div className="mb-4 flex items-center justify-between gap-2">
-              <h2 className="flex items-center gap-2 text-base font-bold text-black">
-                <span className="text-lg">🧑‍🍳</span> Your Prompt
-              </h2>
+          {/* Footer (inside scroll area) */}
+          <footer className="pb-6 text-center text-xs font-semibold text-black/50">
+            made with 🫘 &amp; 🍞 · cooking up Airbnb “Lava” skeuomorphic icons
+          </footer>
+        </div>
+      </div>
 
-              {/* Format toggle */}
-              <div className="inline-flex rounded-xl border-2 border-black bg-orange-100 p-1">
-                <button
-                  type="button"
-                  onClick={() => setFormat("text")}
-                  className={[
-                    "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all",
-                    format === "text"
-                      ? "bg-black text-white"
-                      : "text-black/60 hover:text-black",
-                  ].join(" ")}
-                >
-                  <FileText className="h-3.5 w-3.5" />
-                  Text
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormat("json")}
-                  className={[
-                    "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all",
-                    format === "json"
-                      ? "bg-black text-white"
-                      : "text-black/60 hover:text-black",
-                  ].join(" ")}
-                >
-                  <Braces className="h-3.5 w-3.5" />
-                  JSON
-                </button>
-              </div>
-            </div>
+      {/* Sticky bottom "Copy Prompt" bar */}
+      <div className="shrink-0 border-t-2 border-black bg-white/95 shadow-[0_-6px_24px_rgba(0,0,0,0.10)] backdrop-blur">
+        <div className="mx-auto w-full max-w-3xl px-4 py-4 sm:px-6">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h2 className="flex items-center gap-2 text-base font-bold text-black">
+              <span className="text-lg">🧑‍🍳</span> Your Prompt
+            </h2>
 
-            <div className="relative">
-              <pre
-                key={format + output}
-                className="animate-pop-in max-h-[360px] overflow-auto rounded-2xl border-2 border-black bg-[#2b1d12] p-4 text-xs leading-relaxed text-amber-50 shadow-[inset_2px_2px_0_0_rgba(0,0,0,0.4)]"
+            {/* Format toggle */}
+            <div className="inline-flex rounded-xl border-2 border-black bg-orange-100 p-1">
+              <button
+                type="button"
+                onClick={() => setFormat("text")}
+                className={[
+                  "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all",
+                  format === "text"
+                    ? "bg-black text-white"
+                    : "text-black/60 hover:text-black",
+                ].join(" ")}
               >
-                <code
-                  className={
-                    format === "json" ? "whitespace-pre" : "whitespace-pre-wrap"
-                  }
-                >
-                  {output}
-                </code>
-              </pre>
+                <FileText className="h-3.5 w-3.5" />
+                Text
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormat("json")}
+                className={[
+                  "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all",
+                  format === "json"
+                    ? "bg-black text-white"
+                    : "text-black/60 hover:text-black",
+                ].join(" ")}
+              >
+                <Braces className="h-3.5 w-3.5" />
+                JSON
+              </button>
             </div>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+            <pre
+              key={format + output}
+              className="animate-pop-in max-h-[112px] flex-1 overflow-auto rounded-2xl border-2 border-black bg-[#2b1d12] p-4 text-xs leading-relaxed text-amber-50 shadow-[inset_2px_2px_0_0_rgba(0,0,0,0.4)] sm:max-h-[132px]"
+            >
+              <code
+                className={
+                  format === "json" ? "whitespace-pre" : "whitespace-pre-wrap"
+                }
+              >
+                {output}
+              </code>
+            </pre>
 
             <button
               type="button"
               onClick={copyPrompt}
               className={[
-                "mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-black px-4 py-3.5 text-sm font-bold text-black shadow-chunky transition-all duration-150",
+                "inline-flex w-full flex-none items-center justify-center gap-2 rounded-2xl border-2 border-black px-4 py-3.5 text-sm font-bold text-black shadow-chunky transition-all duration-150 sm:w-52",
                 "hover:-translate-y-0.5 hover:shadow-chunky-lg active:translate-y-0 active:shadow-[2px_2px_0_0_rgba(0,0,0,0.85)]",
                 copied ? "bg-emerald-300" : "bg-rose-300 hover:bg-rose-200",
               ].join(" ")}
@@ -634,17 +642,13 @@ export default function Home() {
                 </>
               )}
             </button>
-
-            <p className="mt-3 text-center text-[11px] font-medium text-black/50">
-              Paste into Midjourney, DALL·E, or your favourite image model.
-            </p>
           </div>
-        </section>
-      </div>
 
-      <footer className="mt-6 text-center text-xs font-semibold text-black/50 lg:shrink-0">
-        made with 🫘 &amp; 🍞 · cooking up Airbnb “Lava” skeuomorphic icons
-      </footer>
+          <p className="mt-2 text-center text-[11px] font-medium text-black/50">
+            Paste into Midjourney, DALL·E, or your favourite image model.
+          </p>
+        </div>
+      </div>
     </main>
   );
 }
