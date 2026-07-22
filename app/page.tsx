@@ -569,84 +569,111 @@ export default function Home() {
       </div>
 
       {/* Sticky bottom "Copy Prompt" bar */}
-      <div className="shrink-0 border-t-2 border-black bg-white/95 shadow-[0_-6px_24px_rgba(0,0,0,0.10)] backdrop-blur">
-        <div className="mx-auto w-full max-w-3xl px-4 py-4 sm:px-6">
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <h2 className="flex items-center gap-2 text-base font-bold text-black">
-              <span className="text-lg">🧑‍🍳</span> Your Prompt
-            </h2>
+      <div className="shrink-0 border-t-2 border-black bg-gradient-to-b from-white to-amber-50 shadow-[0_-8px_28px_rgba(0,0,0,0.12)]">
+        {/* little grip handle */}
+        <div className="mx-auto mt-2 h-1.5 w-12 rounded-full bg-black/15" />
 
-            {/* Format toggle */}
-            <div className="inline-flex rounded-xl border-2 border-black bg-orange-100 p-1">
-              <button
-                type="button"
-                onClick={() => setFormat("text")}
-                className={[
-                  "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all",
-                  format === "text"
-                    ? "bg-black text-white"
-                    : "text-black/60 hover:text-black",
-                ].join(" ")}
-              >
-                <FileText className="h-3.5 w-3.5" />
-                Text
-              </button>
-              <button
-                type="button"
-                onClick={() => setFormat("json")}
-                className={[
-                  "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all",
-                  format === "json"
-                    ? "bg-black text-white"
-                    : "text-black/60 hover:text-black",
-                ].join(" ")}
-              >
-                <Braces className="h-3.5 w-3.5" />
-                JSON
-              </button>
+        <div className="mx-auto w-full max-w-4xl px-4 pb-4 pt-3 sm:px-6">
+          {/* Info row: label + live selection chips + count + format toggle */}
+          <div className="mb-2.5 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 text-sm font-bold text-black">
+              <span className="text-base">🧾</span> Your Prompt
+            </span>
+
+            {/* Live selection chips (desktop) */}
+            <div className="hidden items-center gap-1.5 md:flex">
+              {[
+                selectedPerspective.token,
+                selectedMaterial.token,
+                `${selectedAspectRatio.value}`,
+              ].map((chip) => (
+                <span
+                  key={chip}
+                  className="rounded-full border border-black/25 bg-white px-2.5 py-0.5 text-[10px] font-bold text-black/70"
+                >
+                  {chip}
+                </span>
+              ))}
+            </div>
+
+            <div className="ml-auto flex items-center gap-2.5">
+              <span className="hidden text-[11px] font-semibold tabular-nums text-black/40 sm:inline">
+                {output.length} chars
+              </span>
+
+              {/* Format toggle */}
+              <div className="inline-flex rounded-xl border-2 border-black bg-white p-1 shadow-[2px_2px_0_0_rgba(0,0,0,0.85)]">
+                <button
+                  type="button"
+                  onClick={() => setFormat("text")}
+                  className={[
+                    "inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold transition-all",
+                    format === "text"
+                      ? "bg-black text-white"
+                      : "text-black/50 hover:text-black",
+                  ].join(" ")}
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  Text
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormat("json")}
+                  className={[
+                    "inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold transition-all",
+                    format === "json"
+                      ? "bg-black text-white"
+                      : "text-black/50 hover:text-black",
+                  ].join(" ")}
+                >
+                  <Braces className="h-3.5 w-3.5" />
+                  JSON
+                </button>
+              </div>
             </div>
           </div>
 
+          {/* Preview + copy */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
-            <pre
-              key={format + output}
-              className="animate-pop-in max-h-[112px] flex-1 overflow-auto rounded-2xl border-2 border-black bg-[#2b1d12] p-4 text-xs leading-relaxed text-amber-50 shadow-[inset_2px_2px_0_0_rgba(0,0,0,0.4)] sm:max-h-[132px]"
-            >
-              <code
-                className={
-                  format === "json" ? "whitespace-pre" : "whitespace-pre-wrap"
-                }
+            <div className="relative flex-1">
+              <pre
+                key={format + output}
+                className="animate-pop-in max-h-[96px] overflow-auto rounded-2xl border-2 border-black bg-[#fffaf0] p-3.5 font-mono text-[11px] leading-relaxed text-[#3a2a1a] shadow-[inset_2px_2px_0_0_rgba(0,0,0,0.06)] sm:max-h-[112px]"
               >
-                {output}
-              </code>
-            </pre>
+                <code
+                  className={
+                    format === "json" ? "whitespace-pre" : "whitespace-pre-wrap"
+                  }
+                >
+                  {output}
+                </code>
+              </pre>
+              {/* fade hint at the bottom of the scroll box */}
+              <div className="pointer-events-none absolute inset-x-0.5 bottom-0.5 h-5 rounded-b-2xl bg-gradient-to-t from-[#fffaf0] to-transparent" />
+            </div>
 
             <button
               type="button"
               onClick={copyPrompt}
               className={[
-                "inline-flex w-full flex-none items-center justify-center gap-2 rounded-2xl border-2 border-black px-4 py-3.5 text-sm font-bold text-black shadow-chunky transition-all duration-150 sm:w-52",
+                "group inline-flex w-full flex-none items-center justify-center gap-2 rounded-2xl border-2 border-black px-5 py-4 text-sm font-extrabold text-black shadow-chunky transition-all duration-150 sm:w-56",
                 "hover:-translate-y-0.5 hover:shadow-chunky-lg active:translate-y-0 active:shadow-[2px_2px_0_0_rgba(0,0,0,0.85)]",
-                copied ? "bg-emerald-300" : "bg-rose-300 hover:bg-rose-200",
+                copied ? "bg-emerald-300" : "bg-rose-400 hover:bg-rose-300",
               ].join(" ")}
             >
               {copied ? (
                 <>
-                  <Check className="h-4 w-4 animate-wiggle" strokeWidth={3.5} />
+                  <Check className="h-5 w-5 animate-wiggle" strokeWidth={3.5} />
                   Copied! Yum 😋
                 </>
               ) : (
                 <>
-                  <Copy className="h-4 w-4" />
+                  <Copy className="h-5 w-5 transition-transform group-hover:-rotate-6" />
                   Copy Prompt
                 </>
               )}
             </button>
           </div>
-
-          <p className="mt-2 text-center text-[11px] font-medium text-black/50">
-            Paste into Midjourney, DALL·E, or your favourite image model.
-          </p>
         </div>
       </div>
     </main>
