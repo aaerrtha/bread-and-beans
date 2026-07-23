@@ -422,24 +422,29 @@ export default function Home() {
           fresh AI prompts, served warm
         </div>
 
-        <div className="inline-flex rotate-[-1deg] items-center rounded-[2rem] border-[3px] border-black bg-white px-5 py-3 shadow-chunky-lg sm:px-7 sm:py-4">
-          <h1 className="flex flex-wrap items-center justify-center gap-2 text-5xl font-bold tracking-tight text-black sm:text-6xl">
-            <span className="animate-float inline-block drop-shadow-[2px_2px_0_rgba(0,0,0,0.85)]">
-              🫘
-            </span>
-            <span className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 bg-clip-text text-transparent drop-shadow-[2px_2px_0_rgba(0,0,0,0.9)]">
-              beans
-            </span>
-            <span className="text-black/40 drop-shadow-[2px_2px_0_rgba(0,0,0,0.15)]">
-              &amp;
-            </span>
-            <span className="bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 bg-clip-text text-transparent drop-shadow-[2px_2px_0_rgba(0,0,0,0.9)]">
-              toast
-            </span>
-            <span className="animate-float inline-block drop-shadow-[2px_2px_0_rgba(0,0,0,0.85)] [animation-delay:1.5s]">
-              🍞
-            </span>
-          </h1>
+        <div className="relative inline-block">
+          {/* Emoji accents poking out of the plate corners */}
+          <span className="animate-float pointer-events-none absolute -left-5 -top-5 z-10 rotate-[-14deg] text-3xl drop-shadow-[2px_2px_0_rgba(0,0,0,0.25)] sm:-left-6 sm:-top-6 sm:text-4xl">
+            🫘
+          </span>
+          <span className="animate-float pointer-events-none absolute -bottom-5 -right-5 z-10 rotate-[14deg] text-3xl drop-shadow-[2px_2px_0_rgba(0,0,0,0.25)] [animation-delay:1.5s] sm:-bottom-6 sm:-right-6 sm:text-4xl">
+            🍞
+          </span>
+
+          {/* Signboard plate wordmark */}
+          <div className="rotate-[-1deg] rounded-[2rem] border-[3px] border-black bg-white px-6 py-3 shadow-chunky-lg sm:px-9 sm:py-4">
+            <h1 className="flex items-center justify-center gap-2.5 text-5xl font-bold leading-none tracking-tight sm:gap-3.5 sm:text-7xl">
+              <span className="bg-gradient-to-b from-amber-400 via-orange-500 to-orange-600 bg-clip-text text-transparent drop-shadow-[3px_3px_0_rgba(0,0,0,0.9)]">
+                beans
+              </span>
+              <span className="flex h-10 w-10 flex-none rotate-6 items-center justify-center rounded-full border-[3px] border-black bg-amber-300 pb-1 text-2xl font-black text-black shadow-[3px_3px_0_0_rgba(0,0,0,0.85)] sm:h-14 sm:w-14 sm:text-4xl">
+                &amp;
+              </span>
+              <span className="bg-gradient-to-b from-rose-400 via-red-500 to-red-600 bg-clip-text text-transparent drop-shadow-[3px_3px_0_rgba(0,0,0,0.9)]">
+                toast
+              </span>
+            </h1>
+          </div>
         </div>
 
         <p className="mx-auto mt-4 max-w-xl text-sm font-medium leading-relaxed text-black/70 sm:text-base">
