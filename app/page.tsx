@@ -2,10 +2,14 @@
 
 import { useMemo, useState } from "react";
 import {
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+} from "motion/react";
+import {
   Check,
   Copy,
   Shuffle,
-  Sparkles,
   Eye,
   Layers,
   Boxes,
@@ -179,23 +183,8 @@ type ComplexityValue = (typeof COMPLEXITIES)[number]["value"];
 type AspectRatioValue = (typeof ASPECT_RATIOS)[number]["value"];
 type Format = "text" | "json";
 
-/* ------------------------------------------------------------------ */
-/* Playful accent palette (full classes so Tailwind keeps them)        */
-/* ------------------------------------------------------------------ */
-
-type Accent = {
-  emoji: string;
-  chip: string; // section badge background
-  selectedBg: string; // selected option card background
-};
-
-const ACCENTS = {
-  butter: { emoji: "🍞", chip: "bg-amber-400", selectedBg: "bg-amber-200" },
-  sky: { emoji: "👀", chip: "bg-sky-400", selectedBg: "bg-sky-200" },
-  jam: { emoji: "✨", chip: "bg-rose-400", selectedBg: "bg-rose-200" },
-  bean: { emoji: "🫘", chip: "bg-emerald-400", selectedBg: "bg-emerald-200" },
-  grape: { emoji: "📐", chip: "bg-violet-400", selectedBg: "bg-violet-200" },
-} satisfies Record<string, Accent>;
+const springSoft = { type: "spring" as const, stiffness: 420, damping: 32 };
+const springSnappy = { type: "spring" as const, stiffness: 520, damping: 34 };
 
 /* ------------------------------------------------------------------ */
 /* Prompt generation                                                   */
@@ -244,77 +233,152 @@ function OptionCard<T extends string>({
   option,
   selected,
   onSelect,
-  accent,
+  index,
 }: {
   option: Option<T> & { label: string; hint: string };
   selected: boolean;
   onSelect: () => void;
-  accent: Accent;
+  index: number;
 }) {
+  const reduceMotion = useReducedMotion();
+
   return (
-    <button
+    <motion.button
       type="button"
       role="radio"
       aria-checked={selected}
       onClick={onSelect}
-      className={[
-        "group relative w-full rounded-2xl border-2 border-black p-4 text-left",
-        "transition-all duration-150 ease-out",
-        selected
-          ? `${accent.selectedBg} shadow-chunky -translate-y-0.5 -rotate-1`
-          : "bg-white shadow-[3px_3px_0_0_rgba(0,0,0,0.85)] hover:-translate-y-0.5 hover:rotate-1 hover:shadow-chunky",
-      ].join(" ")}
+      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ ...springSoft, delay: reduceMotion ? 0 : 0.04 * index }}
+      whileHover={reduceMotion || selected ? undefined : { y: -1 }}
+      whileTap={reduceMotion ? undefined : { scale: 0.985 }}
+      className="group relative w-full overflow-hidden rounded-[14px] p-3.5 text-left"
     >
-      <div className="flex items-start justify-between gap-2">
+      {/* Idle surface */}
+      <motion.span
+        aria-hidden
+        className="absolute inset-0 rounded-[14px] bg-[var(--color-surface)]"
+        animate={{
+          opacity: selected ? 0 : 1,
+          boxShadow: selected
+            ? "0 0 0 transparent"
+            : "0 1px 2px oklch(0.173 0 0 / 0.04), 0 4px 16px oklch(0.173 0 0 / 0.04)",
+        }}
+        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+      />
+
+      {/* Selected fill + glow — fades in place, no slide */}
+      <motion.span
+        aria-hidden
+        className="absolute inset-0 rounded-[14px] bg-[var(--color-fg)]"
+        initial={false}
+        animate={{
+          opacity: selected ? 1 : 0,
+          scale: selected ? 1 : 0.96,
+          boxShadow: selected
+            ? "0 0 20px 2px oklch(0.173 0 0 / 0.18), 0 0 40px 4px oklch(0.173 0 0 / 0.08), 0 8px 20px oklch(0.173 0 0 / 0.1)"
+            : "0 0 0 transparent",
+        }}
+        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+      />
+
+      <div className="relative z-10 flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="truncate text-sm font-bold text-black">
+          <motion.p
+            animate={{ color: selected ? "#ffffff" : "oklch(0.173 0 0)" }}
+            transition={{ duration: 0.2 }}
+            className="truncate text-[13px] font-medium tracking-[-0.01em]"
+          >
             {option.label}
-          </p>
-          <p className="mt-0.5 text-xs font-medium text-black/60">
+          </motion.p>
+          <motion.p
+            animate={{
+              color: selected ? "rgba(255,255,255,0.6)" : "oklch(0.45 0.01 80)",
+            }}
+            transition={{ duration: 0.2 }}
+            className="mt-0.5 text-[11px] leading-snug"
+          >
             {option.hint}
-          </p>
+          </motion.p>
         </div>
-        <span
-          className={[
-            "mt-0.5 flex h-6 w-6 flex-none items-center justify-center rounded-full border-2 border-black transition-all",
-            selected
-              ? "scale-100 bg-black text-white"
-              : "scale-90 bg-white text-transparent group-hover:scale-100",
-          ].join(" ")}
+
+        <motion.span
+          animate={{
+            backgroundColor: selected ? "#ffffff" : "oklch(0.975 0.005 80)",
+            color: selected ? "oklch(0.173 0 0)" : "transparent",
+            scale: selected ? 1 : 0.9,
+          }}
+          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-0.5 flex h-4 w-4 flex-none items-center justify-center overflow-hidden rounded-full"
         >
-          <Check className="h-3.5 w-3.5" strokeWidth={3.5} />
-        </span>
+          <AnimatePresence mode="popLayout" initial={false}>
+            {selected ? (
+              <motion.span
+                key="check"
+                initial={
+                  reduceMotion
+                    ? false
+                    : { opacity: 0, scale: 0.4, filter: "blur(3px)" }
+                }
+                animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                exit={
+                  reduceMotion
+                    ? undefined
+                    : { opacity: 0, scale: 0.4, filter: "blur(3px)" }
+                }
+                transition={{ duration: 0.16 }}
+                className="flex"
+              >
+                <Check className="h-2.5 w-2.5" strokeWidth={3} />
+              </motion.span>
+            ) : null}
+          </AnimatePresence>
+        </motion.span>
       </div>
-    </button>
+    </motion.button>
   );
 }
 
-function SectionCard({
-  accent,
+function Section({
+  icon: Icon,
   title,
   subtitle,
   children,
+  index,
 }: {
-  accent: Accent;
+  icon: LucideIcon;
   title: string;
   subtitle: string;
   children: React.ReactNode;
+  index: number;
 }) {
+  const reduceMotion = useReducedMotion();
+
   return (
-    <div className="rounded-3xl border-2 border-black bg-white/90 p-5 shadow-chunky-lg backdrop-blur">
+    <motion.section
+      initial={reduceMotion ? false : { opacity: 0, y: 12, filter: "blur(4px)" }}
+      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      transition={{ ...springSoft, delay: reduceMotion ? 0 : 0.06 + index * 0.05 }}
+      className="surface rounded-[20px] p-5 sm:p-6"
+    >
       <div className="mb-4 flex items-center gap-3">
-        <span
-          className={`flex h-11 w-11 flex-none items-center justify-center rounded-2xl border-2 border-black text-xl shadow-[2px_2px_0_0_rgba(0,0,0,0.85)] ${accent.chip}`}
+        <motion.span
+          whileHover={reduceMotion ? undefined : { scale: 1.06, rotate: -4 }}
+          transition={springSoft}
+          className="flex h-8 w-8 flex-none items-center justify-center rounded-[10px] bg-[var(--color-surface-2)] text-[var(--color-fg)]"
         >
-          {accent.emoji}
-        </span>
-        <div>
-          <h2 className="text-base font-bold text-black">{title}</h2>
-          <p className="text-xs font-medium text-black/60">{subtitle}</p>
+          <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
+        </motion.span>
+        <div className="min-w-0">
+          <h2 className="text-[13px] font-semibold tracking-[-0.01em] text-[var(--color-fg)]">
+            {title}
+          </h2>
+          <p className="text-[12px] text-[var(--color-muted)]">{subtitle}</p>
         </div>
       </div>
       {children}
-    </div>
+    </motion.section>
   );
 }
 
@@ -323,6 +387,7 @@ function SectionCard({
 /* ------------------------------------------------------------------ */
 
 export default function Home() {
+  const reduceMotion = useReducedMotion();
   const [subject, setSubject] = useState("coffee cup");
   const [perspective, setPerspective] = useState<PerspectiveValue>("front");
   const [material, setMaterial] = useState<MaterialValue>("gloss");
@@ -330,12 +395,18 @@ export default function Home() {
   const [aspectRatio, setAspectRatio] = useState<AspectRatioValue>("1:1");
   const [format, setFormat] = useState<Format>("text");
   const [copied, setCopied] = useState(false);
-  const [spin, setSpin] = useState(false);
+  const [shuffleKey, setShuffleKey] = useState(0);
 
   const selectedPerspective = PERSPECTIVES.find((p) => p.value === perspective)!;
   const selectedMaterial = MATERIALS.find((m) => m.value === material)!;
   const selectedComplexity = COMPLEXITIES.find((c) => c.value === complexity)!;
   const selectedAspectRatio = ASPECT_RATIOS.find((a) => a.value === aspectRatio)!;
+
+  const chips = [
+    selectedPerspective.token,
+    selectedMaterial.token,
+    selectedAspectRatio.value,
+  ];
 
   const output = useMemo(() => {
     return format === "text"
@@ -368,8 +439,7 @@ export default function Home() {
       next = RANDOM_SUBJECTS[Math.floor(Math.random() * RANDOM_SUBJECTS.length)];
     }
     setSubject(next);
-    setSpin(true);
-    setTimeout(() => setSpin(false), 500);
+    setShuffleKey((k) => k + 1);
   }
 
   async function copyPrompt() {
@@ -378,7 +448,6 @@ export default function Home() {
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(text);
       } else {
-        // Fallback for insecure contexts / denied permissions
         const ta = document.createElement("textarea");
         ta.value = text;
         ta.style.position = "fixed";
@@ -390,9 +459,8 @@ export default function Home() {
         document.body.removeChild(ta);
       }
       setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
+      setTimeout(() => setCopied(false), 1600);
     } catch {
-      // Last-resort fallback
       try {
         const ta = document.createElement("textarea");
         ta.value = text;
@@ -403,7 +471,7 @@ export default function Home() {
         document.execCommand("copy");
         document.body.removeChild(ta);
         setCopied(true);
-        setTimeout(() => setCopied(false), 1800);
+        setTimeout(() => setCopied(false), 1600);
       } catch {
         window.prompt("Copy the prompt below:", text);
       }
@@ -412,281 +480,336 @@ export default function Home() {
 
   return (
     <main className="relative flex h-screen flex-col overflow-hidden">
-      {/* Scrollable content: header + centered controls */}
-      <div className="flex-1 overflow-y-auto px-4 pt-6 sm:px-6 sm:pt-8">
+      <div className="quiet-scroll flex-1 overflow-y-auto px-4 pt-8 sm:px-6 sm:pt-10">
         <div className="mx-auto w-full max-w-2xl">
-          {/* Header */}
-          <header className="mb-8 text-center">
-        <div className="mb-5 inline-flex rotate-[-2deg] items-center gap-2 rounded-full border-2 border-black bg-white px-4 py-1.5 text-xs font-bold text-black shadow-[3px_3px_0_0_rgba(0,0,0,0.85)]">
-          <Sparkles className="h-4 w-4 text-rose-500" />
-          fresh AI prompts, served warm
-        </div>
+          {/* Header — staggered enter */}
+          <header className="mb-10">
+            <motion.p
+              initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...springSoft, delay: 0 }}
+              className="mb-3 text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--color-muted)]"
+            >
+              Airbnb Lava · Prompt Generator
+            </motion.p>
+            <motion.h1
+              initial={reduceMotion ? false : { opacity: 0, y: 10, filter: "blur(6px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              transition={{ ...springSoft, delay: 0.04 }}
+              className="font-serif text-[42px] leading-[1.05] tracking-[-0.03em] text-[var(--color-fg)] sm:text-[52px]"
+            >
+              bread<span className="text-[var(--color-muted)]">&amp;</span>beans
+            </motion.h1>
+            <motion.p
+              initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...springSoft, delay: 0.08 }}
+              className="mt-3 max-w-md text-[14px] leading-relaxed text-[var(--color-muted)] sm:text-[15px]"
+            >
+              Craft precise AI image prompts for 3D skeuomorphic icons. Dial in
+              perspective, material, and composition — then copy a ready-to-use
+              prompt.
+            </motion.p>
+          </header>
 
-        <div className="relative inline-block">
-          {/* Emoji accents poking out of the plate corners */}
-          <span className="animate-float pointer-events-none absolute -left-5 -top-5 z-10 rotate-[-14deg] text-3xl drop-shadow-[2px_2px_0_rgba(0,0,0,0.25)] sm:-left-6 sm:-top-6 sm:text-4xl">
-            🫘
-          </span>
-          <span className="animate-float pointer-events-none absolute -bottom-5 -right-5 z-10 rotate-[14deg] text-3xl drop-shadow-[2px_2px_0_rgba(0,0,0,0.25)] [animation-delay:1.5s] sm:-bottom-6 sm:-right-6 sm:text-4xl">
-            🍞
-          </span>
+          <div className="space-y-3.5 pb-8">
+            <Section
+              icon={Shuffle}
+              title="Subject"
+              subtitle="What should the icon depict?"
+              index={0}
+            >
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <div className="relative min-w-0 flex-1">
+                  <input
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    placeholder="e.g. coffee cup, desk lamp, sports car"
+                    className="surface-inset w-full rounded-[12px] px-3.5 py-2.5 text-[13px] text-[var(--color-fg)] outline-none placeholder:text-[var(--color-muted)]/60"
+                  />
+                </div>
+                <motion.button
+                  type="button"
+                  onClick={randomize}
+                  whileHover={reduceMotion ? undefined : { y: -1 }}
+                  whileTap={reduceMotion ? undefined : { scale: 0.97 }}
+                  className="inline-flex flex-none items-center justify-center gap-2 rounded-[12px] bg-[var(--color-fg)] px-4 py-2.5 text-[13px] font-medium text-white"
+                >
+                  <motion.span
+                    key={shuffleKey}
+                    initial={reduceMotion ? false : { rotate: 0 }}
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex"
+                  >
+                    <Shuffle className="h-3.5 w-3.5" strokeWidth={1.75} />
+                  </motion.span>
+                  Randomize
+                </motion.button>
+              </div>
+            </Section>
 
-          {/* Signboard plate wordmark */}
-          <div className="rotate-[-1deg] rounded-[2rem] border-[3px] border-black bg-white px-6 py-3 shadow-chunky-lg sm:px-9 sm:py-4">
-            <h1 className="flex items-center justify-center gap-2.5 text-5xl font-bold leading-none tracking-tight sm:gap-3.5 sm:text-7xl">
-              <span className="bg-gradient-to-b from-amber-400 via-orange-500 to-orange-600 bg-clip-text text-transparent drop-shadow-[3px_3px_0_rgba(0,0,0,0.9)]">
-                beans
-              </span>
-              <span className="flex h-10 w-10 flex-none rotate-6 items-center justify-center rounded-full border-[3px] border-black bg-amber-300 pb-1 text-2xl font-black text-black shadow-[3px_3px_0_0_rgba(0,0,0,0.85)] sm:h-14 sm:w-14 sm:text-4xl">
-                &amp;
-              </span>
-              <span className="bg-gradient-to-b from-rose-400 via-red-500 to-red-600 bg-clip-text text-transparent drop-shadow-[3px_3px_0_rgba(0,0,0,0.9)]">
-                toast
-              </span>
-            </h1>
-          </div>
-        </div>
-
-        <p className="mx-auto mt-4 max-w-xl text-sm font-medium leading-relaxed text-black/70 sm:text-base">
-          A playful little kitchen for cooking up AI image prompts — 3D
-          skeuomorphic icons in Airbnb&apos;s tasty{" "}
-          <span className="font-bold text-orange-600">Lava</span> design style.
-          Pick a subject, dial in the flavour, and copy a ready-to-serve prompt!
-        </p>
-      </header>
-
-          {/* Controls (centered single column) */}
-          <section className="space-y-6 pb-8">
-            {/* Subject */}
-          <SectionCard
-            accent={ACCENTS.butter}
-            title="Subject"
-            subtitle="What should the icon show?"
-          >
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <input
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder="e.g. coffee cup, desk lamp, sports car"
-                className="w-full rounded-2xl border-2 border-black bg-amber-50 px-4 py-3 text-sm font-semibold text-black shadow-[inset_2px_2px_0_0_rgba(0,0,0,0.08)] outline-none transition-all placeholder:font-medium placeholder:text-black/40 focus:-translate-y-0.5 focus:bg-white focus:shadow-chunky"
-              />
-              <button
-                type="button"
-                onClick={randomize}
-                className="inline-flex flex-none items-center justify-center gap-2 rounded-2xl border-2 border-black bg-amber-400 px-5 py-3 text-sm font-bold text-black shadow-chunky transition-all hover:-translate-y-0.5 hover:rotate-1 hover:bg-amber-300 active:translate-y-0 active:shadow-[2px_2px_0_0_rgba(0,0,0,0.85)]"
+            <Section
+              icon={Eye}
+              title="Perspective"
+              subtitle="Camera angle for the icon"
+              index={1}
+            >
+              <div
+                role="radiogroup"
+                className="grid grid-cols-1 gap-2 sm:grid-cols-3"
               >
-                <Shuffle
-                  className={`h-4 w-4 ${spin ? "animate-wiggle" : ""}`}
-                />
-                Surprise me!
-              </button>
-            </div>
-          </SectionCard>
+                {PERSPECTIVES.map((o, i) => (
+                  <OptionCard
+                    key={o.value}
+                    option={o}
+                    selected={perspective === o.value}
+                    onSelect={() => setPerspective(o.value)}
+                    index={i}
+                  />
+                ))}
+              </div>
+            </Section>
 
-          {/* Perspective */}
-          <SectionCard
-            accent={ACCENTS.sky}
-            title="Perspective"
-            subtitle="Camera angle for the icon"
-          >
-            <div
-              role="radiogroup"
-              className="grid grid-cols-1 gap-3 sm:grid-cols-3"
+            <Section
+              icon={Layers}
+              title="Primary Material Finish"
+              subtitle="Surface texture and reflectivity"
+              index={2}
             >
-              {PERSPECTIVES.map((o) => (
-                <OptionCard
-                  key={o.value}
-                  option={o}
-                  selected={perspective === o.value}
-                  onSelect={() => setPerspective(o.value)}
-                  accent={ACCENTS.sky}
-                />
-              ))}
-            </div>
-          </SectionCard>
+              <div
+                role="radiogroup"
+                className="grid grid-cols-1 gap-2 sm:grid-cols-2"
+              >
+                {MATERIALS.map((o, i) => (
+                  <OptionCard
+                    key={o.value}
+                    option={o}
+                    selected={material === o.value}
+                    onSelect={() => setMaterial(o.value)}
+                    index={i}
+                  />
+                ))}
+              </div>
+            </Section>
 
-          {/* Material */}
-          <SectionCard
-            accent={ACCENTS.jam}
-            title="Primary Material Finish"
-            subtitle="Surface texture & shine"
-          >
-            <div
-              role="radiogroup"
-              className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+            <Section
+              icon={Boxes}
+              title="Element Complexity"
+              subtitle="How busy the composition is"
+              index={3}
             >
-              {MATERIALS.map((o) => (
-                <OptionCard
-                  key={o.value}
-                  option={o}
-                  selected={material === o.value}
-                  onSelect={() => setMaterial(o.value)}
-                  accent={ACCENTS.jam}
-                />
-              ))}
-            </div>
-          </SectionCard>
+              <div
+                role="radiogroup"
+                className="grid grid-cols-1 gap-2 sm:grid-cols-3"
+              >
+                {COMPLEXITIES.map((o, i) => (
+                  <OptionCard
+                    key={o.value}
+                    option={o}
+                    selected={complexity === o.value}
+                    onSelect={() => setComplexity(o.value)}
+                    index={i}
+                  />
+                ))}
+              </div>
+            </Section>
 
-          {/* Complexity */}
-          <SectionCard
-            accent={ACCENTS.bean}
-            title="Element Complexity"
-            subtitle="How busy the plate is"
-          >
-            <div
-              role="radiogroup"
-              className="grid grid-cols-1 gap-3 sm:grid-cols-3"
+            <Section
+              icon={Ratio}
+              title="Aspect Ratio"
+              subtitle="Canvas shape for the render"
+              index={4}
             >
-              {COMPLEXITIES.map((o) => (
-                <OptionCard
-                  key={o.value}
-                  option={o}
-                  selected={complexity === o.value}
-                  onSelect={() => setComplexity(o.value)}
-                  accent={ACCENTS.bean}
-                />
-              ))}
-            </div>
-          </SectionCard>
+              <div
+                role="radiogroup"
+                className="grid grid-cols-2 gap-2 sm:grid-cols-3"
+              >
+                {ASPECT_RATIOS.map((o, i) => (
+                  <OptionCard
+                    key={o.value}
+                    option={o}
+                    selected={aspectRatio === o.value}
+                    onSelect={() => setAspectRatio(o.value)}
+                    index={i}
+                  />
+                ))}
+              </div>
+            </Section>
+          </div>
 
-          {/* Aspect ratio */}
-          <SectionCard
-            accent={ACCENTS.grape}
-            title="Aspect Ratio"
-            subtitle="Canvas shape for the render"
-          >
-            <div
-              role="radiogroup"
-              className="grid grid-cols-2 gap-3 sm:grid-cols-3"
-            >
-              {ASPECT_RATIOS.map((o) => (
-                <OptionCard
-                  key={o.value}
-                  option={o}
-                  selected={aspectRatio === o.value}
-                  onSelect={() => setAspectRatio(o.value)}
-                  accent={ACCENTS.grape}
-                />
-              ))}
-            </div>
-          </SectionCard>
-          </section>
-
-          {/* Footer (inside scroll area) */}
-          <footer className="pb-6 text-center text-xs font-semibold text-black/50">
-            made with 🫘 &amp; 🍞 · cooking up Airbnb “Lava” skeuomorphic icons
+          <footer className="pb-6 text-center text-[11px] text-[var(--color-muted)]">
+            bread&amp;beans · Airbnb Lava skeuomorphic prompts
           </footer>
         </div>
       </div>
 
-      {/* Sticky bottom "Copy Prompt" bar */}
-      <div className="shrink-0 border-t-2 border-black bg-gradient-to-b from-white to-amber-50 shadow-[0_-8px_28px_rgba(0,0,0,0.12)]">
-        {/* little grip handle */}
-        <div className="mx-auto mt-2 h-1.5 w-12 rounded-full bg-black/15" />
-
-        <div className="mx-auto w-full max-w-4xl px-4 pb-4 pt-3 sm:px-6">
-          {/* Info row: label + live selection chips + count + format toggle */}
+      {/* Sticky bottom prompt bar */}
+      <motion.div
+        initial={reduceMotion ? false : { y: 24, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ ...springSoft, delay: 0.2 }}
+        className="shrink-0 bg-[var(--color-surface)]/90 shadow-[0_-8px_32px_oklch(0.173_0_0_/_0.06)] backdrop-blur-xl"
+      >
+        <div className="mx-auto w-full max-w-3xl px-4 py-3.5 sm:px-6 sm:py-4">
           <div className="mb-2.5 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 text-sm font-bold text-black">
-              <span className="text-base">🧾</span> Your Prompt
+            <span className="text-[12px] font-medium tracking-[-0.01em] text-[var(--color-fg)]">
+              Prompt
             </span>
 
-            {/* Live selection chips (desktop) */}
             <div className="hidden items-center gap-1.5 md:flex">
-              {[
-                selectedPerspective.token,
-                selectedMaterial.token,
-                `${selectedAspectRatio.value}`,
-              ].map((chip) => (
-                <span
-                  key={chip}
-                  className="rounded-full border border-black/25 bg-white px-2.5 py-0.5 text-[10px] font-bold text-black/70"
-                >
-                  {chip}
-                </span>
-              ))}
+              <AnimatePresence mode="popLayout" initial={false}>
+                {chips.map((chip) => (
+                  <motion.span
+                    key={chip}
+                    layout
+                    initial={
+                      reduceMotion
+                        ? false
+                        : { opacity: 0, scale: 0.85, filter: "blur(4px)" }
+                    }
+                    animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                    exit={
+                      reduceMotion
+                        ? undefined
+                        : { opacity: 0, scale: 0.85, filter: "blur(4px)" }
+                    }
+                    transition={{ duration: 0.2 }}
+                    className="rounded-full bg-[var(--color-surface-2)] px-2 py-0.5 text-[10px] font-medium tabular-nums text-[var(--color-muted)]"
+                  >
+                    {chip}
+                  </motion.span>
+                ))}
+              </AnimatePresence>
             </div>
 
             <div className="ml-auto flex items-center gap-2.5">
-              <span className="hidden text-[11px] font-semibold tabular-nums text-black/40 sm:inline">
-                {output.length} chars
-              </span>
+              <motion.span
+                key={output.length}
+                initial={reduceMotion ? false : { opacity: 0.4, y: 2 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="hidden text-[11px] tabular-nums text-[var(--color-muted)] sm:inline"
+              >
+                {output.length.toLocaleString()} chars
+              </motion.span>
 
-              {/* Format toggle */}
-              <div className="inline-flex rounded-xl border-2 border-black bg-white p-1 shadow-[2px_2px_0_0_rgba(0,0,0,0.85)]">
-                <button
-                  type="button"
-                  onClick={() => setFormat("text")}
-                  className={[
-                    "inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold transition-all",
-                    format === "text"
-                      ? "bg-black text-white"
-                      : "text-black/50 hover:text-black",
-                  ].join(" ")}
-                >
-                  <FileText className="h-3.5 w-3.5" />
-                  Text
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormat("json")}
-                  className={[
-                    "inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold transition-all",
-                    format === "json"
-                      ? "bg-black text-white"
-                      : "text-black/50 hover:text-black",
-                  ].join(" ")}
-                >
-                  <Braces className="h-3.5 w-3.5" />
-                  JSON
-                </button>
+              {/* Sliding format toggle */}
+              <div className="relative inline-flex rounded-[10px] bg-[var(--color-surface-2)] p-0.5">
+                {(["text", "json"] as Format[]).map((f) => {
+                  const active = format === f;
+                  return (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setFormat(f)}
+                      className={[
+                        "relative inline-flex items-center gap-1.5 rounded-[8px] px-2.5 py-1 text-[11px] font-medium transition-colors",
+                        active
+                          ? "text-[var(--color-fg)]"
+                          : "text-[var(--color-muted)] hover:text-[var(--color-fg)]",
+                      ].join(" ")}
+                    >
+                      {active && (
+                        <motion.span
+                          layoutId="format-pill"
+                          className="absolute inset-0 rounded-[8px] bg-[var(--color-surface)] shadow-[0_1px_2px_oklch(0.173_0_0_/_0.06)]"
+                          transition={springSnappy}
+                        />
+                      )}
+                      <span className="relative z-10 inline-flex items-center gap-1.5">
+                        {f === "text" ? (
+                          <FileText className="h-3 w-3" strokeWidth={1.75} />
+                        ) : (
+                          <Braces className="h-3 w-3" strokeWidth={1.75} />
+                        )}
+                        {f === "text" ? "Text" : "JSON"}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
 
-          {/* Preview + copy */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
-            <div className="relative flex-1">
-              <pre
-                key={format + output}
-                className="animate-pop-in max-h-[96px] overflow-auto rounded-2xl border-2 border-black bg-[#fffaf0] p-3.5 font-mono text-[11px] leading-relaxed text-[#3a2a1a] shadow-[inset_2px_2px_0_0_rgba(0,0,0,0.06)] sm:max-h-[112px]"
-              >
-                <code
-                  className={
-                    format === "json" ? "whitespace-pre" : "whitespace-pre-wrap"
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-stretch">
+            <div className="relative min-w-0 flex-1 overflow-hidden rounded-[14px]">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.pre
+                  key={format + output}
+                  initial={
+                    reduceMotion
+                      ? false
+                      : { opacity: 0, y: 4, filter: "blur(4px)" }
                   }
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  exit={
+                    reduceMotion
+                      ? undefined
+                      : { opacity: 0, y: -4, filter: "blur(4px)" }
+                  }
+                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  className="quiet-scroll max-h-[88px] overflow-auto rounded-[14px] bg-[var(--color-fg)] p-3.5 font-mono text-[11px] leading-relaxed text-white/85 sm:max-h-[104px]"
                 >
-                  {output}
-                </code>
-              </pre>
-              {/* fade hint at the bottom of the scroll box */}
-              <div className="pointer-events-none absolute inset-x-0.5 bottom-0.5 h-5 rounded-b-2xl bg-gradient-to-t from-[#fffaf0] to-transparent" />
+                  <code
+                    className={
+                      format === "json"
+                        ? "whitespace-pre"
+                        : "whitespace-pre-wrap"
+                    }
+                  >
+                    {output}
+                  </code>
+                </motion.pre>
+              </AnimatePresence>
             </div>
 
-            <button
+            <motion.button
               type="button"
               onClick={copyPrompt}
-              className={[
-                "group inline-flex w-full flex-none items-center justify-center gap-2 rounded-2xl border-2 border-black px-5 py-4 text-sm font-extrabold text-black shadow-chunky transition-all duration-150 sm:w-56",
-                "hover:-translate-y-0.5 hover:shadow-chunky-lg active:translate-y-0 active:shadow-[2px_2px_0_0_rgba(0,0,0,0.85)]",
-                copied ? "bg-emerald-300" : "bg-rose-400 hover:bg-rose-300",
-              ].join(" ")}
+              whileHover={reduceMotion ? undefined : { y: -1 }}
+              whileTap={reduceMotion ? undefined : { scale: 0.97 }}
+              animate={{
+                backgroundColor: copied
+                  ? "oklch(0.55 0.15 150)"
+                  : "oklch(0.173 0 0)",
+              }}
+              transition={{ duration: 0.25 }}
+              className="inline-flex w-full flex-none items-center justify-center gap-2 overflow-hidden rounded-[14px] px-5 py-3 text-[13px] font-medium text-white sm:w-44"
             >
-              {copied ? (
-                <>
-                  <Check className="h-5 w-5 animate-wiggle" strokeWidth={3.5} />
-                  Copied! Yum 😋
-                </>
-              ) : (
-                <>
-                  <Copy className="h-5 w-5 transition-transform group-hover:-rotate-6" />
-                  Copy Prompt
-                </>
-              )}
-            </button>
+              <AnimatePresence mode="popLayout" initial={false}>
+                <motion.span
+                  key={copied ? "check" : "copy"}
+                  initial={
+                    reduceMotion
+                      ? false
+                      : { opacity: 0, scale: 0.25, filter: "blur(4px)" }
+                  }
+                  animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                  exit={
+                    reduceMotion
+                      ? undefined
+                      : { opacity: 0, scale: 0.25, filter: "blur(4px)" }
+                  }
+                  transition={{ duration: 0.18 }}
+                  className="inline-flex items-center gap-2"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3.5 w-3.5" strokeWidth={1.75} />
+                      Copy Prompt
+                    </>
+                  )}
+                </motion.span>
+              </AnimatePresence>
+            </motion.button>
           </div>
         </div>
-      </div>
+      </motion.div>
     </main>
   );
 }

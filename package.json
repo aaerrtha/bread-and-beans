@@ -1,5 +1,5 @@
 {
-  "name": "iconlava",
+  "name": "bread-and-beans",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "lucide-react": "^0.454.0",
+    "motion": "^12.43.0",
     "next": "^15.5.21",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

@@ -1,17 +1,30 @@
 import type { Metadata } from "next";
-import { Fredoka } from "next/font/google";
+import { Instrument_Sans, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const fredoka = Fredoka({
+const sans = Instrument_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  variable: "--font-fredoka",
+  variable: "--font-sans-ui",
+});
+
+const serif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: ["400"],
+  style: ["normal", "italic"],
+  variable: "--font-serif-display",
+});
+
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-mono-code",
 });
 
 export const metadata: Metadata = {
-  title: "beans&toast 🫘🍞 – Fun AI Icon Prompt Generator",
+  title: "bread&beans — AI Icon Prompt Generator",
   description:
-    "A playful little kitchen for cooking up AI image prompts for 3D skeuomorphic icons in Airbnb's Lava design style.",
+    "Generate precise AI image prompts for 3D skeuomorphic icons in Airbnb's Lava design style.",
 };
 
 export default function RootLayout({
@@ -20,8 +33,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={fredoka.variable}>
-      <body className="lava-backdrop min-h-screen font-sans antialiased">
+    <html lang="en" className={`${sans.variable} ${serif.variable} ${mono.variable}`}>
+      <body className="min-h-screen bg-[var(--color-bg)] font-sans text-[var(--color-fg)] antialiased">
         {children}
       </body>
     </html>
