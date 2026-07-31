@@ -19,6 +19,17 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+const SHADOW_IDLE =
+  "0 1px 2px oklch(0.173 0 0 / 0.04), 0 4px 16px oklch(0.173 0 0 / 0.04)";
+const SHADOW_HOVER =
+  "0 4px 10px oklch(0.173 0 0 / 0.06), 0 14px 32px oklch(0.173 0 0 / 0.1)";
+const GLOW_SELECTED =
+  "0 0 20px 2px oklch(0.173 0 0 / 0.18), 0 0 40px 4px oklch(0.173 0 0 / 0.08), 0 8px 20px oklch(0.173 0 0 / 0.1)";
+const GLOW_SELECTED_HOVER =
+  "0 0 28px 4px oklch(0.173 0 0 / 0.28), 0 0 56px 8px oklch(0.173 0 0 / 0.12), 0 10px 28px oklch(0.173 0 0 / 0.14)";
+const GLOW_CTA =
+  "0 0 24px 2px oklch(0.173 0 0 / 0.22), 0 8px 24px oklch(0.173 0 0 / 0.16)";
+
 /* ------------------------------------------------------------------ */
 /* Data                                                                */
 /* ------------------------------------------------------------------ */
@@ -241,6 +252,7 @@ function OptionCard<T extends string>({
   index: number;
 }) {
   const reduceMotion = useReducedMotion();
+  const [hovered, setHovered] = useState(false);
 
   return (
     <motion.button
@@ -248,10 +260,19 @@ function OptionCard<T extends string>({
       role="radio"
       aria-checked={selected}
       onClick={onSelect}
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
       initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ ...springSoft, delay: reduceMotion ? 0 : 0.04 * index }}
-      whileHover={reduceMotion || selected ? undefined : { y: -1 }}
+      animate={{
+        opacity: 1,
+        y: reduceMotion ? 0 : hovered ? -3 : 0,
+        scale: reduceMotion ? 1 : hovered ? 1.02 : 1,
+      }}
+      transition={{
+        opacity: { ...springSoft, delay: reduceMotion ? 0 : 0.04 * index },
+        y: springSoft,
+        scale: springSoft,
+      }}
       whileTap={reduceMotion ? undefined : { scale: 0.985 }}
       className="group relative w-full overflow-hidden rounded-[14px] p-3.5 text-left"
     >
@@ -263,9 +284,11 @@ function OptionCard<T extends string>({
           opacity: selected ? 0 : 1,
           boxShadow: selected
             ? "0 0 0 transparent"
-            : "0 1px 2px oklch(0.173 0 0 / 0.04), 0 4px 16px oklch(0.173 0 0 / 0.04)",
+            : hovered
+              ? SHADOW_HOVER
+              : SHADOW_IDLE,
         }}
-        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
       />
 
       {/* Selected fill + glow — fades in place, no slide */}
@@ -277,10 +300,12 @@ function OptionCard<T extends string>({
           opacity: selected ? 1 : 0,
           scale: selected ? 1 : 0.96,
           boxShadow: selected
-            ? "0 0 20px 2px oklch(0.173 0 0 / 0.18), 0 0 40px 4px oklch(0.173 0 0 / 0.08), 0 8px 20px oklch(0.173 0 0 / 0.1)"
+            ? hovered
+              ? GLOW_SELECTED_HOVER
+              : GLOW_SELECTED
             : "0 0 0 transparent",
         }}
-        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
       />
 
       <div className="relative z-10 flex items-start justify-between gap-2">
@@ -531,9 +556,14 @@ export default function Home() {
                 <motion.button
                   type="button"
                   onClick={randomize}
-                  whileHover={reduceMotion ? undefined : { y: -1 }}
+                  whileHover={
+                    reduceMotion
+                      ? undefined
+                      : { y: -2, scale: 1.03, boxShadow: GLOW_CTA }
+                  }
                   whileTap={reduceMotion ? undefined : { scale: 0.97 }}
-                  className="inline-flex flex-none items-center justify-center gap-2 rounded-[12px] bg-[var(--color-fg)] px-4 py-2.5 text-[13px] font-medium text-white"
+                  transition={springSoft}
+                  className="inline-flex flex-none items-center justify-center gap-2 rounded-[12px] bg-[var(--color-fg)] px-4 py-2.5 text-[13px] font-medium text-white shadow-[0_4px_14px_oklch(0.173_0_0_/_0.12)]"
                 >
                   <motion.span
                     key={shuffleKey}
@@ -766,15 +796,25 @@ export default function Home() {
             <motion.button
               type="button"
               onClick={copyPrompt}
-              whileHover={reduceMotion ? undefined : { y: -1 }}
+              whileHover={
+                reduceMotion
+                  ? undefined
+                  : {
+                      y: -2,
+                      scale: 1.03,
+                      boxShadow: copied
+                        ? "0 0 28px 2px oklch(0.55 0.15 150 / 0.35), 0 8px 24px oklch(0.55 0.15 150 / 0.2)"
+                        : GLOW_CTA,
+                    }
+              }
               whileTap={reduceMotion ? undefined : { scale: 0.97 }}
               animate={{
                 backgroundColor: copied
                   ? "oklch(0.55 0.15 150)"
                   : "oklch(0.173 0 0)",
               }}
-              transition={{ duration: 0.25 }}
-              className="inline-flex w-full flex-none items-center justify-center gap-2 overflow-hidden rounded-[14px] px-5 py-3 text-[13px] font-medium text-white sm:w-44"
+              transition={springSoft}
+              className="inline-flex w-full flex-none items-center justify-center gap-2 overflow-hidden rounded-[14px] px-5 py-3 text-[13px] font-medium text-white shadow-[0_4px_14px_oklch(0.173_0_0_/_0.12)] sm:w-44"
             >
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.span
